@@ -73,8 +73,6 @@ data_warehousing/
 │   ├── gold/
 │   └── tests/
 │
-├── images/
-│
 ├── README.md
 ├── LICENSE
 └── .gitignore
