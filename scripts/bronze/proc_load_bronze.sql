@@ -18,7 +18,7 @@ Usage Example:
 */
 CREATE OR ALTER PROCEDURE bronze.load_bronze AS
 BEGIN
-	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME; 
+	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME,@status NVARCHAR(20);
 	BEGIN TRY
 		SET @batch_start_time = GETDATE();
 		PRINT '================================================';
@@ -129,6 +129,27 @@ BEGIN
 		PRINT 'Loading Bronze Layer is Completed';
         PRINT '   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
 		PRINT '=========================================='
+
+		SET @status = 'Success';
+		INSERT INTO etl.etl_log
+		(
+		    layer_name,
+		    procedure_name,
+		    start_time,
+		    end_time,
+		    duration_seconds,
+		    status
+		)
+		VALUES
+		(
+		    'Bronze',
+		    'bronze.load_bronze',
+		    @batch_start_time,
+		    @batch_end_time,
+		    DATEDIFF(SECOND,@batch_start_time,@batch_end_time),
+		    @status
+		);
+		
 	END TRY
 	BEGIN CATCH
 		PRINT '=========================================='
@@ -137,5 +158,27 @@ BEGIN
 		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
 		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);
 		PRINT '=========================================='
+		SET @batch_end_time = GETDATE();
+
+		SET @status = 'Failed';
+		
+		INSERT INTO etl.etl_log
+		(
+		    layer_name,
+		    procedure_name,
+		    start_time,
+		    end_time,
+		    duration_seconds,
+		    status
+		)
+		VALUES
+		(
+		    'Bronze',
+		    'bronze.load_bronze',
+		    @batch_start_time,
+		    @batch_end_time,
+		    DATEDIFF(SECOND,@batch_start_time,@batch_end_time),
+		    @status
+		);
 	END CATCH
 END
